@@ -7,17 +7,16 @@ public class EnemyAttack : MonoBehaviour
 	public int attackDamage = 10;
 	public AudioClip attackSound;
 
-
-	Animator anim;
-	GameObject player;
+	private Animator anim;
+	private GameObject player;
 	private AudioSource audioSource;
-	PlayerHealth playerHealth;
-	EnemyHealth enemyHealth;
-	bool playerInRange;
-	float timer;
+	private PlayerHealth playerHealth;
+	private EnemyHealth enemyHealth;
+	private bool playerInRange;
+	private float timer;
 
 
-	void Awake()
+	private void Awake()
 	{
 		player = GameObject.FindGameObjectWithTag("Player");
 		playerHealth = player.GetComponent<PlayerHealth>();
@@ -34,7 +33,7 @@ public class EnemyAttack : MonoBehaviour
 	}
 
 
-	void OnTriggerEnter(Collider other)
+	private void OnTriggerEnter(Collider other)
 	{
 		if (other.gameObject == player)
 		{
@@ -43,7 +42,7 @@ public class EnemyAttack : MonoBehaviour
 	}
 
 
-	void OnTriggerExit(Collider other)
+	private void OnTriggerExit(Collider other)
 	{
 		if (other.gameObject == player)
 		{
@@ -53,7 +52,7 @@ public class EnemyAttack : MonoBehaviour
 	}
 
 
-	void Update()
+	private void Update()
 	{
 		timer += Time.deltaTime;
 
@@ -70,7 +69,7 @@ public class EnemyAttack : MonoBehaviour
 	}
 
 
-	void Attack()
+	private void Attack()
 	{
 		timer = 0f;
 		

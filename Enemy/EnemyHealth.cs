@@ -8,15 +8,14 @@ public class EnemyHealth : MonoBehaviour
 	public AudioClip deathClip;
 	public AudioClip hurtClip;
 
+	private Animator anim;
+	private AudioSource enemyAudio;
+	private SphereCollider sphereCollider;
+	private CapsuleCollider capsuleCollider;
+	private bool isDead;
 
-	Animator anim;
-	AudioSource enemyAudio;
-	SphereCollider sphereCollider;
-	CapsuleCollider capsuleCollider;
-	bool isDead;
 
-
-	void Awake()
+	private void Awake()
 	{
 		anim = GetComponent<Animator>();
 		enemyAudio = GetComponent<AudioSource>();
@@ -49,7 +48,7 @@ public class EnemyHealth : MonoBehaviour
 		}
 	}
 
-	void Death()
+	private void Death()
 	{
 		isDead = true;
 		GameManager.Instance.IncreaseScore(scoreValue);
@@ -65,5 +64,10 @@ public class EnemyHealth : MonoBehaviour
 	public void SetInactive()
 	{
 		gameObject.SetActive(false);
+	}
+
+	public bool getIsDead()
+	{
+		return isDead;
 	}
 }

@@ -1,12 +1,15 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
-public class WeaponSwitcher : MonoBehaviour {
+public class WeaponManager : MonoBehaviour {
 
 	public int selectedWeapon = 0;
+	public Text ammoText;
 
-	private bool weapon1Active;
+	private PlayerShooting currentWeapon;
+
 
 	void Start () {
 		SelectWeapon();
@@ -37,12 +40,22 @@ public class WeaponSwitcher : MonoBehaviour {
 		{
 			if(i == selectedWeapon)
 			{
+				PlayerShooting playerShooting = weapon.GetComponent<PlayerShooting>();
+				playerShooting.Aim(false);
+				ammoText.text = playerShooting.GetCurrentAmmo();
 				weapon.gameObject.SetActive(true);
-			} else
+				
+			}
+			else
 			{
 				weapon.gameObject.SetActive(false);
 			}
 			i++;
 		}
+	}
+
+	public void SetAmmoText(string str)
+	{
+		ammoText.text = str;
 	}
 }

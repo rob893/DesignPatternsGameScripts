@@ -9,59 +9,51 @@ public class Rocket : MonoBehaviour {
 	public float explosionForce = 10f;
 	public GameObject impactEffect;
 	public LayerMask enemyMask;
-	//public AudioSource explosionSound;
 
-	private float timer;
 
-	void OnEnable()
+	private void OnEnable()
 	{
-		timer = 0;
-
 		gameObject.GetComponent<Rigidbody>().velocity = 100f * transform.forward;
-	}
-
-	private void Update()
-	{
-		timer += Time.deltaTime;
-
-		if (timer >= 4)
-		{
-			SetInactive();
-		}
+		StartCoroutine(SetInactiveCoroutine(6f));
 	}
 
 	private void OnTriggerEnter(Collider other)
 	{
-		Collider[] colliders = Physics.OverlapSphere(transform.position, impactRadius, enemyMask);
-
-		for (int i = 0; i < colliders.Length; i++)
+		if(other.tag != "Player")
 		{
-			Rigidbody targetRigidbody = colliders[i].GetComponent<Rigidbody>();
+			Collider[] colliders = Physics.OverlapSphere(transform.position, impactRadius, enemyMask);
 
-			if (!targetRigidbody)
+			for (int i = 0; i < colliders.Length; i++)
 			{
-				continue;
+				Rigidbody targetRigidbody = colliders[i].GetComponent<Rigidbody>();
+
+				if (!targetRigidbody)
+				{
+					continue;
+				}
+
+				targetRigidbody.AddExplosionForce(explosionForce, transform.position, explosionForce);
+
+				EnemyHealth targetHealth = targetRigidbody.GetComponent<EnemyHealth>();
+
+				if (!targetHealth)
+				{
+					continue;
+				}
+
+				float damage = CalculateDamage(targetRigidbody.transform.position);
+
+				targetHealth.TakeDamage((int)damage);
 			}
 
-			targetRigidbody.AddExplosionForce(explosionForce, transform.position, explosionForce);
 
-			EnemyHealth targetHealth = targetRigidbody.GetComponent<EnemyHealth>();
 
-			if (!targetHealth)
-			{
-				continue;
-			}
-
-			float damage = CalculateDamage(targetRigidbody.transform.position);
-
-			targetHealth.TakeDamage((int)damage);
+			GameObject impactInstance = ObjectPooler.Instance.GetPooledObject(impactEffect);
+			impactInstance.transform.position = transform.position;
+			impactInstance.transform.rotation = transform.rotation;
+			impactInstance.SetActive(true);
+			SetInactive();
 		}
-
-		
-		//explosionSound.Play();
-
-		Instantiate(impactEffect, transform.position, transform.rotation);
-		SetInactive();
 	}
 
 
@@ -81,6 +73,12 @@ public class Rocket : MonoBehaviour {
 
 	private void SetInactive()
 	{
+		gameObject.SetActive(false);
+	}
+
+	public IEnumerator SetInactiveCoroutine(float duration)
+	{
+		yield return new WaitForSeconds(duration);
 		gameObject.SetActive(false);
 	}
 }

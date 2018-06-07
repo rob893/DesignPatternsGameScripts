@@ -2,48 +2,89 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+
+[System.Serializable]
+public class ObjectPoolItem
+{
+	public int pooledAmount;
+	public GameObject objectToPool;
+	public bool willGrow;
+}
+
+
 public class ObjectPooler : MonoBehaviour {
 
 	//Singleton pattern
-	public static ObjectPooler current;
+	public static ObjectPooler Instance;
 
-	public GameObject pooledObject;
-	public int pooledAmount = 30;
-	public bool willGrow = true;
-
-	List<GameObject> pooledObjects;
+	public Dictionary<int, List<GameObject>> pooledObjects = new Dictionary<int, List<GameObject>>();
+	public List<ObjectPoolItem> itemsToPool;
 
 	private void Awake()
 	{
-		current = this;
+		if (Instance != null)
+		{
+			return;
+		}
+		Instance = this;
 	}
 
 	private void Start()
 	{
-		pooledObjects = new List<GameObject>();
-		for(int i = 0; i < pooledAmount; i++)
+		PoolObjects();
+	}
+
+	private void PoolObjects()
+	{
+		foreach (ObjectPoolItem item in itemsToPool)
 		{
-			GameObject obj = (GameObject)Instantiate(pooledObject, transform.position, transform.rotation);
-			obj.SetActive(false);
-			pooledObjects.Add(obj);
+			int objId = item.objectToPool.GetInstanceID();
+			if (!pooledObjects.ContainsKey(objId))
+			{
+				pooledObjects.Add(objId, new List<GameObject>());
+			}
+
+			GameObject obj;
+			for (int i = 0; i < item.pooledAmount; i++)
+			{
+				obj = (GameObject)Instantiate(item.objectToPool, transform.position, transform.rotation);
+				obj.SetActive(false);
+				pooledObjects[objId].Add(obj);
+			}
 		}
 	}
 
-	public GameObject GetPooledObject()
+	public GameObject GetPooledObject(GameObject sourceObj)
 	{
-		for(int i = 0; i < pooledObjects.Count; i++)
+		int objId = sourceObj.GetInstanceID();
+
+		if (!pooledObjects.ContainsKey(objId))
 		{
-			if (!pooledObjects[i].activeInHierarchy)
+			Debug.Log(sourceObj.name + " not found in object pool!");
+			return null;
+		}
+
+		List<GameObject> itemPool = pooledObjects[objId];
+
+		for(int i = 0; i < itemPool.Count; i++)
+		{
+			if (!itemPool[i].activeInHierarchy)
 			{
-				return pooledObjects[i];
+				return itemPool[i];
 			}
 		}
 
-		if (willGrow)
+		foreach(ObjectPoolItem item in itemsToPool)
 		{
-			GameObject obj = (GameObject)Instantiate(pooledObject, transform.position, transform.rotation);
-			pooledObjects.Add(obj);
-			return obj;
+			int newObjId = item.objectToPool.GetInstanceID();
+			if(newObjId == objId && item.willGrow)
+			{
+				GameObject obj = (GameObject)Instantiate(item.objectToPool, transform.position, transform.rotation);
+				obj.SetActive(false);
+				pooledObjects[objId].Add(obj);
+				Debug.Log("Added " + item.objectToPool.name + " to the object pool!");
+				return obj;
+			}
 		}
 
 		return null;

@@ -10,7 +10,7 @@ public class EnemyManager : MonoBehaviour
 	private float spawnTime;
 
 
-	void Start()
+	private void Start()
 	{
 		player = GameObject.FindGameObjectWithTag("Player");
 		playerHealth = player.GetComponent<PlayerHealth>();
@@ -19,13 +19,13 @@ public class EnemyManager : MonoBehaviour
 	}
 
 
-	void Spawn()
+	private void Spawn()
 	{
 		if(playerHealth.currentHealth > 0)
 		{
 			int spawnPointIndex = Random.Range(0, spawnPoints.Length);
 
-			GameObject obj = ObjectPooler.current.GetPooledObject();
+			GameObject obj = ObjectPooler.Instance.GetPooledObject(enemy);
 			obj.transform.position = spawnPoints[spawnPointIndex].position;
 			obj.transform.rotation = spawnPoints[spawnPointIndex].rotation;
 			obj.SetActive(true);

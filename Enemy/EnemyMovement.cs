@@ -10,7 +10,7 @@ public class EnemyMovement : MonoBehaviour
 	UnityEngine.AI.NavMeshAgent nav;
 
 
-	void Start()
+	private void Start()
 	{
 		player = GameObject.FindGameObjectWithTag("Player").transform;
 		playerHealth = player.GetComponent<PlayerHealth>();
@@ -27,7 +27,7 @@ public class EnemyMovement : MonoBehaviour
 		}
 	}
 
-	void Update()
+	private void Update()
 	{
 		if (enemyHealth.currentHealth > 0 && playerHealth.currentHealth > 0)
 		{

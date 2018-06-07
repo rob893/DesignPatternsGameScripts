@@ -10,12 +10,15 @@ public class GameManager : MonoBehaviour {
 	public static GameManager Instance;
 
 	public CanvasGroup sceneMessage;
-	public Text text;
 	public float spawnTime;
+	public int scoreToWin = 2000;
 	public float zombieMovementSpeed;
 
 	private int score;
+	private bool paused = false;
 	private Text sceneMessageText;
+	private Text gameOverText;
+	private Text scoreText;
 	private GameObject[] pauseObjects;
 	private GameObject[] gameOverObjects;
 	private GameObject player;
@@ -36,21 +39,31 @@ public class GameManager : MonoBehaviour {
 		spawnTime = 5f;
 		zombieMovementSpeed = 4f;
 		gameOverObjects = GameObject.FindGameObjectsWithTag("ShowGameOver");
+		pauseObjects = GameObject.FindGameObjectsWithTag("ShowPause");
+		scoreText = GameObject.Find("ScoreText").GetComponent<Text>();
+		sceneMessageText = GameObject.Find("sceneMessageText").GetComponent<Text>();
+		scoreText.text = "Get " + scoreToWin + " points to win! \nScore: " + score;
+		gameOverText = GameObject.Find("GameOverText").GetComponent<Text>();
 		HideGameOver();
+		HidePaused();
 	}
 
 	private void Update()
 	{
 		if (Input.GetKeyDown("p"))
 		{
-			PauseControl();
+			Pause();
 		}
 	}
 
 	public void IncreaseScore(int amount)
 	{
 		score += amount;
-		text.text = "Score: " + score;
+		scoreText.text = "Get " + scoreToWin + " points to win! \n Score: " + score;
+		if(score >= scoreToWin)
+		{
+			GameOver(true);
+		}
 		if(spawnTime > 0)
 		{
 			spawnTime -= 0.5f;
@@ -58,12 +71,32 @@ public class GameManager : MonoBehaviour {
 		zombieMovementSpeed += 0.1f;
 	}
 
-	public void GameOver()
+	public void GameOver(bool win)
 	{
-		Cursor.lockState = CursorLockMode.None;
-		Cursor.lockState = CursorLockMode.Confined;
-		Cursor.visible = true;
+		if (win)
+		{
+			gameOverText.text = "You Win!";
+		}
+		else
+		{
+			gameOverText.text = "You Suck!";
+		}
+
 		ShowGameOver();
+		PauseControl();
+	}
+
+	public void Pause()
+	{
+		if (paused)
+		{
+			HidePaused();
+		}
+		else
+		{
+			ShowPaused();
+		}
+
 		PauseControl();
 	}
 
@@ -78,7 +111,7 @@ public class GameManager : MonoBehaviour {
 		if (Time.timeScale == 1)
 		{
 			Time.timeScale = 0;
-			//ShowPaused();
+			paused = true;
 			Cursor.lockState = CursorLockMode.None;
 			Cursor.lockState = CursorLockMode.Confined;
 			Cursor.visible = true;
@@ -87,8 +120,8 @@ public class GameManager : MonoBehaviour {
 		else if (Time.timeScale == 0)
 		{
 			Time.timeScale = 1;
+			paused = false;
 			playerController.enabled = true;
-			//HidePaused();
 		}
 	}
 
@@ -113,7 +146,6 @@ public class GameManager : MonoBehaviour {
 		foreach (GameObject g in gameOverObjects)
 		{
 			g.SetActive(true);
-			//GameObject.Find("PauseButton").GetComponent<Button>().enabled = false;
 		}
 	}
 
@@ -130,23 +162,24 @@ public class GameManager : MonoBehaviour {
 		SceneManager.LoadScene(level, LoadSceneMode.Single);
 	}
 
-	public IEnumerator ShowMessageCoroutine(string message, float timeToShow)
+	private IEnumerator ShowMessageCoroutine(string message, float timeToShow, bool hide)
 	{
-		sceneMessage.alpha = 1;
 		sceneMessageText.text = message;
-		float timeShown = 0;
-		while (timeShown < timeToShow)
+		if (hide)
 		{
-			timeShown += Time.deltaTime;
-			yield return null;
+			float timeShown = 0;
+			while (timeShown < timeToShow)
+			{
+				timeShown += Time.deltaTime;
+				yield return null;
+			}
+			sceneMessageText.text = "";
 		}
-		sceneMessage.alpha = 0;
-		sceneMessageText.text = "";
 	}
 
-	public void ShowMessage(string message, float timeToShow)
+	public void ShowMessage(string message, float timeToShow = 0, bool hide = true)
 	{
-		StartCoroutine(ShowMessageCoroutine(message, timeToShow));
+		StartCoroutine(ShowMessageCoroutine(message, timeToShow, hide));
 	}
 
 	public void QuitGame()

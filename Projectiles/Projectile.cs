@@ -6,18 +6,19 @@ public class Projectile : MonoBehaviour {
 
 	public int damage = 25;
 	public GameObject impactEffect;
+
 	private Vector3 prevPos;
 	private float timer;
 
-	void OnEnable()
+	private void OnEnable()
 	{
 		prevPos = transform.position;
 		timer = 0;
 
-		gameObject.GetComponent<Rigidbody>().velocity = 300f * transform.forward;
+		gameObject.GetComponent<Rigidbody>().velocity = 500f * transform.forward;
 	}
 
-	void FixedUpdate()
+	private void FixedUpdate()
 	{
 		timer += Time.deltaTime;
 
@@ -38,7 +39,10 @@ public class Projectile : MonoBehaviour {
 		}
 		if(hits.Length > 0)
 		{
-			Instantiate(impactEffect, transform.position, transform.rotation);
+			GameObject impactInstance = ObjectPooler.Instance.GetPooledObject(impactEffect);
+			impactInstance.transform.position = transform.position;
+			impactInstance.transform.rotation = transform.rotation;
+			impactInstance.SetActive(true);
 			SetInactive();
 		}
 
