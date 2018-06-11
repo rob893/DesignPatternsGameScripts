@@ -37,7 +37,7 @@ public class Inventory : MonoBehaviour {
 
 	private void OnTriggerEnter(Collider other)
 	{
-		if (other.GetComponent<PlayerShooting>())
+		if (other.GetComponent<AbstractWeapon>())
 		{
 			item = other.gameObject;
 			itemInRange = true;
@@ -64,7 +64,7 @@ public class Inventory : MonoBehaviour {
 		item.transform.localRotation = Quaternion.Euler(0, 0, 0);
 		item.transform.localScale = new Vector3(1, 1, 1);
 		item.GetComponent<SphereCollider>().enabled = false;
-		item.GetComponent<PlayerShooting>().enabled = true;
+		item.GetComponent<AbstractWeapon>().enabled = true;
 		GameManager.Instance.ShowMessage("", 1);
 
 		item.SetActive(false);

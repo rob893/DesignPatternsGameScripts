@@ -34,6 +34,7 @@ public class Projectile : MonoBehaviour {
 			if (hits[i].collider.gameObject.CompareTag("Enemy"))
 			{
 				hits[i].collider.gameObject.GetComponent<EnemyHealth>().TakeDamage(damage);
+				break;
 			}
 
 		}

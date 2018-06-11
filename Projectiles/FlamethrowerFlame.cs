@@ -5,7 +5,6 @@ using UnityEngine;
 public class FlamethrowerFlame : MonoBehaviour {
 
 	public int damage = 5;
-	public Transform gunBarrel;
 
 	private float timer;
 	private AudioSource flameSound;
@@ -13,7 +12,6 @@ public class FlamethrowerFlame : MonoBehaviour {
 
 	private void Awake()
 	{
-		gunBarrel = GameObject.Find("FlamethrowerBarrel").transform;
 		enemiesInFlame = new List<EnemyHealth>();
 		flameSound = GetComponent<AudioSource>();
 	}
@@ -31,10 +29,7 @@ public class FlamethrowerFlame : MonoBehaviour {
 	{
 		timer += Time.deltaTime;
 
-		transform.position = gunBarrel.position;
-		transform.rotation = gunBarrel.rotation;
-
-		if(timer >= 0.25)
+		if(timer >= 0.2)
 		{
 			foreach (EnemyHealth enemy in enemiesInFlame.ToArray())
 			{
@@ -49,11 +44,6 @@ public class FlamethrowerFlame : MonoBehaviour {
 			}
 
 			timer = 0;
-		}
-
-		if (Input.GetButtonUp("Fire1"))
-		{
-			SetInactive();
 		}
 	}
 
@@ -77,10 +67,12 @@ public class FlamethrowerFlame : MonoBehaviour {
 		}
 	}
 
-
-	private void SetInactive()
+	public void SetInactive()
 	{
-		enemiesInFlame.Clear();
+		if(enemiesInFlame != null)
+		{
+			enemiesInFlame.Clear();
+		}
 		gameObject.SetActive(false);
 	}
 }

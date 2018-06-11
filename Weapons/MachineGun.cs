@@ -2,14 +2,14 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PlayerShooting : MonoBehaviour {
+public class MachineGun : AbstractWeapon {
+
+	//Strategy Pattern
 
 	public float timeBetweenBullets = 0.1f;
 	public int startingAmmo = 1000;
 	public Transform gunBarrel;
 	public GameObject projectile;
-	public bool singleShot;
-	public bool hasAmmo;
 
 	private float timer;
 	private int currentAmmo;
@@ -38,90 +38,47 @@ public class PlayerShooting : MonoBehaviour {
 		}
 	}
 
-	private void Update()
+	private void OnDisable()
 	{
+		fired = false;
+	}
+
+	private void Update () {
 		timer += Time.deltaTime;
-
-		if (Input.GetButton("Fire1") && timer >= timeBetweenBullets && Time.timeScale != 0)
-		{
-			if(!singleShot)
-			{
-				Shoot();
-			}
-			else
-			{
-				if (!fired)
-				{
-					Shoot();
-				}
-			}
-		}
-
-		if (Input.GetButtonUp("Fire1"))
-		{
-			fired = false;
-			transform.localRotation = isAiming ? Quaternion.Euler(-1, 0, 0) : Quaternion.Euler(0, 0, 0);
-		}
-
-		if (Input.GetButton("Fire2"))
-		{
-			Aim(true);
-		}
-
-		if (Input.GetButtonUp("Fire2"))
-		{
-			Aim(false);
-		}
-
-		if (Input.GetKeyDown("1") && hasAmmo)
-		{
-			AddAmmo(10);
-		}
 
 		if (timer >= timeBetweenBullets * effectsDisplayTime)
 		{
 			DisableEffects();
 		}
-
 	}
 
-	public void DisableEffects()
+	public override void Shoot()
 	{
-		gunLight.enabled = false;
-	}
-
-	private void Shoot()
-	{
-		if(hasAmmo && currentAmmo <= 0)
+		if(timer >= timeBetweenBullets)
 		{
-			GameManager.Instance.ShowMessage("Out of ammo!", 2f);
-			return;
-		}
+			if (currentAmmo <= 0)
+			{
+				GameManager.Instance.ShowMessage("Out of ammo!", 2f);
+				return;
+			}
+			
+			timer = 0f;
 
-		timer = 0f;
-
-		if (hasAmmo)
-		{
 			currentAmmo -= 1;
 			weaponManager.SetAmmoText("Ammo: " + currentAmmo);
-		}
+			
+			gunAudio.Play();
 
-		gunAudio.Play();
+			gunLight.enabled = true;
 
-		
-		gunLight.enabled = true;
+			GameObject projectileInstance = ObjectPooler.Instance.GetPooledObject(projectile);
+			projectileInstance.transform.position = gunBarrel.transform.position;
+			projectileInstance.transform.rotation = gunBarrel.transform.rotation;
+			projectileInstance.SetActive(true);
 
-		GameObject projectileInstance = ObjectPooler.Instance.GetPooledObject(projectile);
-		projectileInstance.transform.position = gunBarrel.transform.position;
-		projectileInstance.transform.rotation = gunBarrel.transform.rotation;
-		projectileInstance.SetActive(true);
-		//projectileInstance.GetComponent<Rigidbody>().velocity = projectileVelocity * gunBarrel.forward;
-
-		if (!singleShot)
-		{
 			if (!isAiming && fired)
 			{
-				Quaternion randomRotation = Quaternion.Euler(Random.Range(-1.75f, 1.75f), Random.Range(-1.75f, 1.75f), 0);
+				Quaternion randomRotation =  Quaternion.Euler(Random.Range(-1.75f, 1.75f), Random.Range(-1.75f, 1.75f), 0);
 				transform.localRotation = randomRotation;
 			}
 			else if (fired)
@@ -131,19 +88,14 @@ public class PlayerShooting : MonoBehaviour {
 			}
 			else
 			{
-				transform.localRotation = Quaternion.Euler(-1f, 0, 0);
+				transform.localRotation = Quaternion.Euler(-1.5f, 0, 0);
 			}
-		}
-		else
-		{
-			gunShot.Play("GunShot");
-		}
 
-
-		fired = true;
+			fired = true;
+		}
 	}
 
-	public void Aim(bool aiming)
+	public override void Aim(bool aiming)
 	{
 		if (aiming)
 		{
@@ -161,21 +113,28 @@ public class PlayerShooting : MonoBehaviour {
 		}
 	}
 
-	public string GetCurrentAmmo()
+	public override string GetCurrentAmmo()
 	{
-		if (hasAmmo)
-		{
-			return "Ammo: " + currentAmmo;
-		}
-		else
-		{
-			return "Ammo: Unlimited";
-		}
+		return "Ammo: " + currentAmmo;
 	}
 
-	public void AddAmmo(int amount)
+	public override void AddAmmo(int amount)
 	{
 		currentAmmo += amount;
 		weaponManager.SetAmmoText("Ammo: " + currentAmmo);
+	}
+
+	public override void SetFired(bool hasFired)
+	{
+		if (hasFired == false)
+		{
+			transform.localRotation = isAiming ? Quaternion.Euler(-1, 0, 0) : Quaternion.Euler(0, 0, 0);
+		}
+		fired = hasFired;
+	}
+
+	public void DisableEffects()
+	{
+		gunLight.enabled = false;
 	}
 }
