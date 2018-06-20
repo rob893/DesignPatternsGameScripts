@@ -6,27 +6,27 @@ public class MachineGun : AbstractWeapon {
 
 	//Strategy Pattern
 
+	public int damage = 25;
 	public float timeBetweenBullets = 0.1f;
 	public int startingAmmo = 1000;
 	public Transform gunBarrel;
 	public GameObject projectile;
 
-	private float timer;
+	private float timer = 0;
 	private int currentAmmo;
 	private Vector3 aimTransform = new Vector3(0f, -0.172f, 0.11f);
 	private Vector3 hipAim = new Vector3(0.1f, -0.25f, 0.15f);
 	private AudioSource gunAudio;
-	private Animation gunShot;
 	private Light gunLight;
 	private float effectsDisplayTime = 0.2f;
 	private bool fired = false;
 	private bool isAiming = false;
 	private WeaponManager weaponManager;
 	private GameObject crosshair;
+	private float damageMod = 1;
 
 	private void Awake()
 	{
-		gunShot = GetComponent<Animation>();
 		gunAudio = GetComponent<AudioSource>();
 		gunLight = GetComponentInChildren<Light>();
 		crosshair = GameObject.Find("Crosshair");
@@ -38,11 +38,6 @@ public class MachineGun : AbstractWeapon {
 		}
 	}
 
-	private void OnDisable()
-	{
-		fired = false;
-	}
-
 	private void Update () {
 		timer += Time.deltaTime;
 
@@ -52,9 +47,47 @@ public class MachineGun : AbstractWeapon {
 		}
 	}
 
-	public override void Shoot()
+	public override void PrimaryFunction(bool b)
 	{
-		if(timer >= timeBetweenBullets)
+		Shoot(b);
+	}
+
+	public override void SecondaryFunction(bool b)
+	{
+		Aim(b);
+	}
+
+	public override string GetWeaponInfo()
+	{
+		return "Ammo: " + currentAmmo;
+	}
+
+	public override bool AddAmmo(int sizeOfAmmoPickup)
+	{
+		int amount;
+		if(sizeOfAmmoPickup == 1)
+		{
+			amount = 100;
+		} 
+		else
+		{
+			amount = 200;
+		}
+		currentAmmo += amount;
+		weaponManager.SetAmmoText("Ammo: " + currentAmmo);
+		return true;
+	}
+
+	public override void ResetWeapon()
+	{
+		fired = false;
+		Aim(false);
+		timer = 0;
+	}
+
+	public void Shoot(bool shoot)
+	{
+		if(shoot && timer >= timeBetweenBullets)
 		{
 			if (currentAmmo <= 0)
 			{
@@ -74,6 +107,7 @@ public class MachineGun : AbstractWeapon {
 			GameObject projectileInstance = ObjectPooler.Instance.GetPooledObject(projectile);
 			projectileInstance.transform.position = gunBarrel.transform.position;
 			projectileInstance.transform.rotation = gunBarrel.transform.rotation;
+			projectileInstance.GetComponent<Projectile>().Damage = (int)(damage * damageMod);
 			projectileInstance.SetActive(true);
 
 			if (!isAiming && fired)
@@ -93,14 +127,20 @@ public class MachineGun : AbstractWeapon {
 
 			fired = true;
 		}
+		else if(!shoot)
+		{
+			transform.localRotation = isAiming ? Quaternion.Euler(-1, 0, 0) : Quaternion.Euler(0, 0, 0);
+			fired = false;
+		}
 	}
 
-	public override void Aim(bool aiming)
+	public void Aim(bool aiming)
 	{
 		if (aiming)
 		{
 			crosshair.SetActive(false);
 			isAiming = true;
+			damageMod = 1.25f;
 			transform.localPosition = Vector3.Slerp(transform.localPosition, aimTransform, 10 * Time.deltaTime);
 			transform.localRotation = Quaternion.Slerp(transform.localRotation, Quaternion.Euler(-1, 0, 0), 10 * Time.deltaTime);
 		}
@@ -108,29 +148,10 @@ public class MachineGun : AbstractWeapon {
 		{
 			crosshair.SetActive(true);
 			isAiming = false;
+			damageMod = 1;
 			transform.localPosition = hipAim;
 			transform.localRotation = Quaternion.Euler(0, 0, 0);
 		}
-	}
-
-	public override string GetCurrentAmmo()
-	{
-		return "Ammo: " + currentAmmo;
-	}
-
-	public override void AddAmmo(int amount)
-	{
-		currentAmmo += amount;
-		weaponManager.SetAmmoText("Ammo: " + currentAmmo);
-	}
-
-	public override void SetFired(bool hasFired)
-	{
-		if (hasFired == false)
-		{
-			transform.localRotation = isAiming ? Quaternion.Euler(-1, 0, 0) : Quaternion.Euler(0, 0, 0);
-		}
-		fired = hasFired;
 	}
 
 	public void DisableEffects()

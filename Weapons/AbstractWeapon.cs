@@ -6,9 +6,9 @@ public abstract class AbstractWeapon : MonoBehaviour {
 
 	//Strategy Pattern
 
-	public abstract void Shoot();
-	public abstract void Aim(bool aiming);
-	public abstract void SetFired(bool hasFired);
-	public abstract void AddAmmo(int amount);
-	public abstract string GetCurrentAmmo();
+	public abstract void PrimaryFunction(bool b);
+	public abstract void SecondaryFunction(bool b);
+	public abstract bool AddAmmo(int sizeOfAmmoPickUp);
+	public abstract string GetWeaponInfo();
+	public abstract void ResetWeapon();
 }

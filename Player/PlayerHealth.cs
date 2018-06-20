@@ -7,7 +7,6 @@ using UnityEngine.SceneManagement;
 public class PlayerHealth : MonoBehaviour
 {
 	public int startingHealth = 100;
-	public int currentHealth;
 	public Slider healthSlider;
 	public AudioClip deathClip;
 	public AudioClip hurtClip;
@@ -15,22 +14,34 @@ public class PlayerHealth : MonoBehaviour
 
 	private AudioSource playerAudio;
 	private UnityStandardAssets.Characters.FirstPerson.FirstPersonController playerMovement;
-	//private PlayerShooting playerShooting;
 	private bool isDead;
+	private int currentHealth;
+	private float damageReductionMod = 1;
 
+	public float DamageReductionMod
+	{
+		get
+		{
+			return damageReductionMod;
+		}
+
+		set
+		{
+			damageReductionMod = value;
+		}
+	}
 
 	private void Start()
 	{
 		playerAudio = GetComponent<AudioSource>();
 		playerMovement = GetComponent<UnityStandardAssets.Characters.FirstPerson.FirstPersonController>();
-		//playerShooting = GetComponentInChildren<PlayerShooting>();
 		currentHealth = startingHealth;
 		healthSlider.value = startingHealth;
 	}
 
 	public void TakeDamage(int amount)
 	{
-		currentHealth -= amount;
+		currentHealth -= (int)(amount * damageReductionMod);
 
 		healthSlider.value = currentHealth;
 		playerAudio.clip = hurtClip;
@@ -46,14 +57,26 @@ public class PlayerHealth : MonoBehaviour
 	{
 		isDead = true;
 
-		//playerShooting.DisableEffects();
-
 		playerAudio.clip = deathClip;
 		playerAudio.Play();
 
 		playerMovement.enabled = false;
-		//playerShooting.enabled = false;
 
 		GameManager.Instance.GameOver(false);
+	}
+
+	public int GetCurrentHealth()
+	{
+		return currentHealth;
+	}
+
+	public void AddHealth(int amount)
+	{
+		currentHealth += amount;
+		if(currentHealth > startingHealth)
+		{
+			currentHealth = startingHealth;
+		}
+		healthSlider.value = currentHealth;
 	}
 }

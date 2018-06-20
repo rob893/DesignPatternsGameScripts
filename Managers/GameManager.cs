@@ -3,56 +3,70 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using TMPro;
 
 public class GameManager : MonoBehaviour {
 
 	//Singleton Pattern
 	public static GameManager Instance;
 
-	public CanvasGroup sceneMessage;
-	public float spawnTime;
+	public float spawnTime = 5;
 	public int scoreToWin = 2000;
-	public float zombieMovementSpeed;
+	public GameObject pauseMenuUI;
+	public bool gameIsPaused = false;
+	public bool gameIsOver = false;
 
-	private int score;
-	private bool paused = false;
-	private Text sceneMessageText;
-	private Text gameOverText;
-	private Text scoreText;
-	private GameObject[] pauseObjects;
-	private GameObject[] gameOverObjects;
+	private int score = 0;
+	private GameObject crosshair;
+	private GameObject resumeButtom;
+	private TextMeshProUGUI sceneMessageText;
+	private TextMeshProUGUI pauseText;
+	private TextMeshProUGUI scoreText;
 	private GameObject player;
+	private WeaponManager weaponManager;
 	private UnityStandardAssets.Characters.FirstPerson.FirstPersonController playerController;
 
 
+	//Singleton
+	private GameManager() { }
+
 	private void Awake()
 	{
-		if(Instance != null)
+		//enforce singleton
+		if(Instance == null)
 		{
-			return;
+			Instance = this;
 		}
-		Instance = this;
+		else if(Instance != this)
+		{
+			Destroy(this);
+		}
 
-		Time.timeScale = 1;
+		resumeButtom = GameObject.Find("ResumeButton");
+		crosshair = GameObject.Find("Crosshair");
 		player = GameObject.FindGameObjectWithTag("Player");
 		playerController = player.GetComponent<UnityStandardAssets.Characters.FirstPerson.FirstPersonController>();
-		spawnTime = 5f;
-		zombieMovementSpeed = 4f;
-		gameOverObjects = GameObject.FindGameObjectsWithTag("ShowGameOver");
-		pauseObjects = GameObject.FindGameObjectsWithTag("ShowPause");
-		scoreText = GameObject.Find("ScoreText").GetComponent<Text>();
-		sceneMessageText = GameObject.Find("sceneMessageText").GetComponent<Text>();
+		weaponManager = player.GetComponentInChildren<WeaponManager>();
+		scoreText = GameObject.Find("ScoreText").GetComponent<TextMeshProUGUI>();
+		sceneMessageText = GameObject.Find("sceneMessageText").GetComponent<TextMeshProUGUI>();
 		scoreText.text = "Get " + scoreToWin + " points to win! \nScore: " + score;
-		gameOverText = GameObject.Find("GameOverText").GetComponent<Text>();
-		HideGameOver();
-		HidePaused();
+		pauseText = GameObject.Find("PauseText").GetComponent<TextMeshProUGUI>();
+		pauseText.text = "PAUSED";
+		Resume();
 	}
 
 	private void Update()
 	{
-		if (Input.GetKeyDown("p"))
+		if (Input.GetKeyDown(KeyCode.Escape))
 		{
-			Pause();
+			if (gameIsPaused && !gameIsOver)
+			{
+				Resume();
+			}
+			else
+			{
+				Pause();
+			}
 		}
 	}
 
@@ -68,36 +82,50 @@ public class GameManager : MonoBehaviour {
 		{
 			spawnTime -= 0.5f;
 		}
-		zombieMovementSpeed += 0.1f;
 	}
 
 	public void GameOver(bool win)
 	{
+		gameIsOver = true;
+
 		if (win)
 		{
-			gameOverText.text = "You Win!";
+			pauseText.text = "YOU WIN!";
 		}
 		else
 		{
-			gameOverText.text = "You Suck!";
+			pauseText.text = "YOU SUCK!";
 		}
-
-		ShowGameOver();
-		PauseControl();
+		pauseText.transform.position = pauseText.transform.position - new Vector3(0, 50, 0);
+		Pause();
+		resumeButtom.SetActive(false);
 	}
 
 	public void Pause()
 	{
-		if (paused)
-		{
-			HidePaused();
-		}
-		else
-		{
-			ShowPaused();
-		}
+		pauseMenuUI.SetActive(true);
+		Time.timeScale = 0f;
+		gameIsPaused = true;
+		Cursor.lockState = CursorLockMode.None;
+		Cursor.lockState = CursorLockMode.Confined;
+		Cursor.visible = true;
+		playerController.enabled = false;
+		weaponManager.enabled = false;
+		crosshair.SetActive(false);
+		sceneMessageText.text = "";
+	}
 
-		PauseControl();
+	public void Resume()
+	{
+		pauseMenuUI.SetActive(false);
+		Time.timeScale = 1f;
+		gameIsPaused = false;
+		Cursor.lockState = CursorLockMode.None;
+		Cursor.lockState = CursorLockMode.Locked;
+		Cursor.visible = false;
+		playerController.enabled = true;
+		weaponManager.enabled = true;
+		crosshair.SetActive(true);
 	}
 
 	public void Reload()
@@ -106,55 +134,9 @@ public class GameManager : MonoBehaviour {
 		SceneManager.LoadScene(currentSceneName, LoadSceneMode.Single);
 	}
 
-	public void PauseControl()
+	public void MainMenu()
 	{
-		if (Time.timeScale == 1)
-		{
-			Time.timeScale = 0;
-			paused = true;
-			Cursor.lockState = CursorLockMode.None;
-			Cursor.lockState = CursorLockMode.Confined;
-			Cursor.visible = true;
-			playerController.enabled = false;
-		}
-		else if (Time.timeScale == 0)
-		{
-			Time.timeScale = 1;
-			paused = false;
-			playerController.enabled = true;
-		}
-	}
-
-	public void ShowPaused()
-	{
-		foreach (GameObject g in pauseObjects)
-		{
-			g.SetActive(true);
-		}
-	}
-
-	public void HidePaused()
-	{
-		foreach (GameObject g in pauseObjects)
-		{
-			g.SetActive(false);
-		}
-	}
-
-	public void ShowGameOver()
-	{
-		foreach (GameObject g in gameOverObjects)
-		{
-			g.SetActive(true);
-		}
-	}
-
-	public void HideGameOver()
-	{
-		foreach (GameObject g in gameOverObjects)
-		{
-			g.SetActive(false);
-		}
+		SceneManager.LoadScene(0);
 	}
 
 	public void LoadLevel(string level)
@@ -185,5 +167,25 @@ public class GameManager : MonoBehaviour {
 	public void QuitGame()
 	{
 		Application.Quit();
+	}
+
+	public void SetLayer(GameObject obj, int layer)
+	{
+		obj.layer = layer;
+		foreach (Transform child in obj.transform)
+			SetLayer(child.gameObject, layer);
+	}
+
+	public int Score
+	{
+		get
+		{
+			return score;
+		}
+
+		set
+		{
+			score = value;
+		}
 	}
 }

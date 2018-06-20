@@ -4,11 +4,12 @@ using UnityEngine;
 
 public class Projectile : MonoBehaviour {
 
-	public int damage = 25;
 	public GameObject impactEffect;
 
+	private int damage = 25;
 	private Vector3 prevPos;
 	private float timer;
+
 
 	private void OnEnable()
 	{
@@ -33,7 +34,7 @@ public class Projectile : MonoBehaviour {
 		{
 			if (hits[i].collider.gameObject.CompareTag("Enemy"))
 			{
-				hits[i].collider.gameObject.GetComponent<EnemyHealth>().TakeDamage(damage);
+				hits[i].collider.gameObject.GetComponent<EnemyHealth>().TakeDamage(Damage);
 				break;
 			}
 
@@ -53,5 +54,18 @@ public class Projectile : MonoBehaviour {
 	private void SetInactive()
 	{
 		gameObject.SetActive(false);
+	}
+
+	public int Damage
+	{
+		get
+		{
+			return damage;
+		}
+
+		set
+		{
+			damage = value;
+		}
 	}
 }

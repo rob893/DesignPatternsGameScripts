@@ -28,16 +28,36 @@ public class Flamethrower : AbstractWeapon {
 		}
 	}
 
-	private void OnDisable()
+	public override void PrimaryFunction(bool b)
 	{
-		
-		flame.GetComponent<FlamethrowerFlame>().SetInactive();
-		fired = false;
+		Shoot(b);
 	}
 
-	public override void Shoot()
+	public override void SecondaryFunction(bool b)
 	{
-		if (!fired)
+		Aim(b);
+	}
+
+	public override bool AddAmmo(int SizeOfAmmoPickup)
+	{
+		return false;
+	}
+
+	public override string GetWeaponInfo()
+	{
+		return "Ammo: Unlimited";
+	}
+
+	public override void ResetWeapon()
+	{
+		flame.GetComponent<FlamethrowerFlame>().SetInactive();
+		fired = false;
+		Aim(false);
+	}
+
+	public void Shoot(bool shoot)
+	{
+		if (shoot && !fired)
 		{
 			gunAudio.Play();
 
@@ -47,9 +67,15 @@ public class Flamethrower : AbstractWeapon {
 
 			fired = true;
 		}
+		else if(!shoot)
+		{
+			transform.localRotation = isAiming ? Quaternion.Euler(-1, 0, 0) : Quaternion.Euler(0, 0, 0);
+			flame.GetComponent<FlamethrowerFlame>().SetInactive();
+			fired = false;
+		}
 	}
 
-	public override void Aim(bool aiming)
+	public void Aim(bool aiming)
 	{
 		if (aiming)
 		{
@@ -66,26 +92,4 @@ public class Flamethrower : AbstractWeapon {
 			transform.localRotation = Quaternion.Euler(0, 0, 0);
 		}
 	}
-
-	public override void AddAmmo(int amount)
-	{
-		return;
-	}
-
-	public override string GetCurrentAmmo()
-	{
-		return "Ammo: Unlimited";
-	}
-
-	public override void SetFired(bool hasFired)
-	{
-		if (hasFired == false)
-		{
-			transform.localRotation = isAiming ? Quaternion.Euler(-1, 0, 0) : Quaternion.Euler(0, 0, 0);
-		}
-		flame.GetComponent<FlamethrowerFlame>().SetInactive();
-		fired = hasFired;
-	}
-
-	
 }

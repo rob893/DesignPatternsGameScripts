@@ -10,17 +10,46 @@ public class EnemyHealth : MonoBehaviour
 
 	private Animator anim;
 	private AudioSource enemyAudio;
+	private EnemyMovement enemyMovement;
 	private SphereCollider sphereCollider;
 	private CapsuleCollider capsuleCollider;
 	private bool isDead;
+	private bool isReusable = false;
+	private float damageReductionMod = 1;
 
+	public bool IsReusable
+	{
+		get
+		{
+			return isReusable;
+		}
+
+		set
+		{
+			isReusable = value;
+		}
+	}
+
+	public float DamageReductionMod
+	{
+		get
+		{
+			return damageReductionMod;
+		}
+
+		set
+		{
+			damageReductionMod = value;
+		}
+	}
 
 	private void Awake()
 	{
 		anim = GetComponent<Animator>();
 		enemyAudio = GetComponent<AudioSource>();
-		sphereCollider = GetComponent<SphereCollider>();
+		sphereCollider = GetComponentInChildren<EnemyAttack>().GetComponent<SphereCollider>();
 		capsuleCollider = GetComponent<CapsuleCollider>();
+		enemyMovement = GetComponent<EnemyMovement>();
 	}
 
 	private void OnEnable()
@@ -35,12 +64,15 @@ public class EnemyHealth : MonoBehaviour
 	public void TakeDamage(int amount)
 	{
 		if (isDead)
+		{
 			return;
+		}
 
 		enemyAudio.clip = hurtClip;
 		enemyAudio.Play();
 
-		currentHealth -= amount;
+		enemyMovement.Aggroed = true;
+		currentHealth -= (int)(amount * damageReductionMod);
 
 		if (currentHealth <= 0)
 		{
@@ -52,11 +84,12 @@ public class EnemyHealth : MonoBehaviour
 	{
 		isDead = true;
 		GameManager.Instance.IncreaseScore(scoreValue);
+		
 		sphereCollider.enabled = false;
 		capsuleCollider.enabled = false;
 		GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
 		anim.SetTrigger("Dead");
-		Invoke("SetInactive", 2f);
+		Invoke("SetInactive", 3f);
 		enemyAudio.clip = deathClip;
 		enemyAudio.Play();
 	}

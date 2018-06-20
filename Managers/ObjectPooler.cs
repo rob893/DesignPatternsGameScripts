@@ -20,13 +20,20 @@ public class ObjectPooler : MonoBehaviour {
 	public Dictionary<int, List<GameObject>> pooledObjects = new Dictionary<int, List<GameObject>>();
 	public List<ObjectPoolItem> itemsToPool;
 
+	//Singleton
+	private ObjectPooler() { }
+
 	private void Awake()
 	{
-		if (Instance != null)
+		//enforce singleton
+		if (Instance == null)
 		{
-			return;
+			Instance = this;
 		}
-		Instance = this;
+		else if (Instance != this)
+		{
+			Destroy(this);
+		}
 	}
 
 	private void Start()

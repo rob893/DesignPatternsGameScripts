@@ -21,14 +21,26 @@ public class EnemyManager : MonoBehaviour
 
 	private void Spawn()
 	{
-		if(playerHealth.currentHealth > 0)
+		Transform closestSpawnPoint = spawnPoints[0];
+		Vector3 playerPosition = player.transform.position;
+		foreach (Transform spawnPoint in spawnPoints)
 		{
-			int spawnPointIndex = Random.Range(0, spawnPoints.Length);
+			float distanceToPlayer = Vector3.Distance(spawnPoint.position, playerPosition);
+			if(distanceToPlayer < Vector3.Distance(closestSpawnPoint.position, playerPosition))
+			{
+				closestSpawnPoint = spawnPoint;
+			}
+		}
+		if(playerHealth.GetCurrentHealth() > 0)
+		{
+			//int spawnPointIndex = Random.Range(0, spawnPoints.Length);
 
 			GameObject obj = ObjectPooler.Instance.GetPooledObject(enemy);
-			obj.transform.position = spawnPoints[spawnPointIndex].position;
-			obj.transform.rotation = spawnPoints[spawnPointIndex].rotation;
+			obj.transform.position = closestSpawnPoint.position;
+			obj.transform.rotation = closestSpawnPoint.rotation;
 			obj.SetActive(true);
+
+			obj.GetComponent<EnemyMovement>().Aggroed = true;
 		}
 	}
 }

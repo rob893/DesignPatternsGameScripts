@@ -39,11 +39,6 @@ public class RocketLauncher : AbstractWeapon {
 		}
 	}
 
-	private void OnDisable()
-	{
-		fired = false;
-	}
-
 	private void Update ()
 	{
 		timer += Time.deltaTime;
@@ -54,9 +49,47 @@ public class RocketLauncher : AbstractWeapon {
 		}
 	}
 
-	public override void Shoot()
+	public override void PrimaryFunction(bool b)
 	{
-		if (timer >= timeBetweenBullets && !fired)
+		Shoot(b);
+	}
+
+	public override void SecondaryFunction(bool b)
+	{
+		Aim(b);
+	}
+
+	public override bool AddAmmo(int sizeOfAmmoPickup)
+	{
+		int amount;
+		if (sizeOfAmmoPickup == 1)
+		{
+			amount = 5;
+		}
+		else
+		{
+			amount = 10;
+		}
+		currentAmmo += amount;
+		weaponManager.SetAmmoText("Ammo: " + currentAmmo);
+		return true;
+	}
+
+	public override string GetWeaponInfo()
+	{
+		return "Ammo: " + currentAmmo;
+	}
+
+	public override void ResetWeapon()
+	{
+		timer = 0;
+		fired = false;
+		Aim(false);
+	}
+
+	public void Shoot(bool shoot)
+	{
+		if (shoot && timer >= timeBetweenBullets && !fired)
 		{
 			
 			if (currentAmmo <= 0)
@@ -84,9 +117,14 @@ public class RocketLauncher : AbstractWeapon {
 			
 			fired = true;
 		}
+		else if(!shoot)
+		{
+			transform.localRotation = isAiming ? Quaternion.Euler(-1, 0, 0) : Quaternion.Euler(0, 0, 0);
+			fired = false;
+		}
 	}
 
-	public override void Aim(bool aiming)
+	public void Aim(bool aiming)
 	{
 		if (aiming)
 		{
@@ -102,26 +140,6 @@ public class RocketLauncher : AbstractWeapon {
 			transform.localPosition = hipAim;
 			transform.localRotation = Quaternion.Euler(0, 0, 0);
 		}
-	}
-
-	public override string GetCurrentAmmo()
-	{
-		return "Ammo: " + currentAmmo;
-	}
-
-	public override void AddAmmo(int amount)
-	{
-		currentAmmo += amount;
-		weaponManager.SetAmmoText("Ammo: " + currentAmmo);
-	}
-
-	public override void SetFired(bool hasFired)
-	{
-		if (hasFired == false)
-		{
-			transform.localRotation = isAiming ? Quaternion.Euler(-1, 0, 0) : Quaternion.Euler(0, 0, 0);
-		}
-		fired = hasFired;
 	}
 
 	public void DisableEffects()
